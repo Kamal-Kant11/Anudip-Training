@@ -14,7 +14,7 @@ public class PatientForm extends JFrame {
     private DefaultListModel<String> patientListModel;
     private int selectedPatientId = -1;
 
-    private Dashboard dashboard;  // reference to dashboard
+    private Dashboard dashboard;
 
     public PatientForm(Dashboard dashboard) {
         this.dashboard = dashboard;
@@ -25,7 +25,6 @@ public class PatientForm extends JFrame {
         setLocationRelativeTo(null);
         setLayout(new BorderLayout());
 
-        // Form Panel
         JPanel formPanel = new JPanel(new GridLayout(6, 2, 10, 10));
 
         formPanel.add(new JLabel("Name:"));
@@ -69,7 +68,6 @@ public class PatientForm extends JFrame {
 
         add(new JScrollPane(patientJList), BorderLayout.CENTER);
 
-        // Back Button
         JButton backButton = new JButton("⬅ Back to Dashboard");
         backButton.addActionListener(e -> {
             this.dispose();
@@ -128,7 +126,8 @@ public class PatientForm extends JFrame {
             contactField.setText(contact);
 
         } catch (Exception ex) {
-            JOptionPane.showMessageDialog(this, "Error loading selected patient.");
+            JOptionPane.showMessageDialog(this, "Error loading selected patient:\n" + ex.getMessage());
+            ex.printStackTrace();
         }
     }
 
@@ -144,13 +143,22 @@ public class PatientForm extends JFrame {
             String gender = genderField.getText().trim();
             String contact = contactField.getText().trim();
 
+            if (name.isEmpty() || gender.isEmpty() || contact.isEmpty()) {
+                JOptionPane.showMessageDialog(this, "Please fill all fields.");
+                return;
+            }
+
             patientData.updatePatient(selectedPatientId, name, age, gender, contact);
 
             JOptionPane.showMessageDialog(this, "Updated successfully!");
             clearForm();
             refreshPatientList();
-        } catch (Exception ex) {
-            JOptionPane.showMessageDialog(this, "Error updating: " + ex.getMessage());
+            selectedPatientId = -1;
+        } catch (NumberFormatException ex) {
+            JOptionPane.showMessageDialog(this, "Age must be a number.");
+        } catch (SQLException ex) {
+            JOptionPane.showMessageDialog(this, "Error updating patient:\n" + ex.getMessage());
+            ex.printStackTrace();
         }
     }
 
@@ -167,11 +175,13 @@ public class PatientForm extends JFrame {
             PatientData patientData = new PatientData();
             patientData.deletePatient(selectedPatientId);
 
-            JOptionPane.showMessageDialog(this, "Deleted!");
+            JOptionPane.showMessageDialog(this, "Deleted successfully!");
             clearForm();
             refreshPatientList();
-        } catch (Exception ex) {
-            JOptionPane.showMessageDialog(this, "Error deleting: " + ex.getMessage());
+            selectedPatientId = -1;
+        } catch (SQLException ex) {
+            JOptionPane.showMessageDialog(this, "Error deleting patient:\n" + ex.getMessage());
+            ex.printStackTrace();
         }
     }
 
@@ -180,6 +190,8 @@ public class PatientForm extends JFrame {
         ageField.setText("");
         genderField.setText("");
         contactField.setText("");
+        selectedPatientId = -1;
+        patientJList.clearSelection();
     }
 
     private void refreshPatientList() {
@@ -190,8 +202,9 @@ public class PatientForm extends JFrame {
             for (String p : patients) {
                 patientListModel.addElement(p);
             }
-        } catch (Exception ex) {
-            JOptionPane.showMessageDialog(this, "Error loading patients.");
+        } catch (SQLException ex) {
+            JOptionPane.showMessageDialog(this, "Error loading patients:\n" + ex.getMessage());
+            ex.printStackTrace();
         }
     }
 }

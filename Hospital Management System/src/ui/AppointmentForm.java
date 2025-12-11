@@ -93,7 +93,8 @@ public class AppointmentForm extends JFrame {
             }
 
         } catch (SQLException e) {
-            JOptionPane.showMessageDialog(this, "Error loading patients.");
+            JOptionPane.showMessageDialog(this, "Error loading patients:\n" + e.getMessage());
+            e.printStackTrace();
         }
     }
 
@@ -109,42 +110,62 @@ public class AppointmentForm extends JFrame {
             }
 
         } catch (SQLException e) {
-            JOptionPane.showMessageDialog(this, "Error loading doctors.");
+            JOptionPane.showMessageDialog(this, "Error loading doctors:\n" + e.getMessage());
+            e.printStackTrace();
         }
     }
 
     private void addAppointment(ActionEvent e) {
         try {
+            if (patientCombo.getSelectedItem() == null || doctorCombo.getSelectedItem() == null) {
+                JOptionPane.showMessageDialog(this, "Please select a patient and a doctor.");
+                return;
+            }
+
             int patientId = Integer.parseInt(patientCombo.getSelectedItem().toString().split("-")[0].trim());
             int doctorId = Integer.parseInt(doctorCombo.getSelectedItem().toString().split("-")[0].trim());
 
-            Date date = Date.valueOf(dateField.getText().trim());
-            Time time = Time.valueOf(timeField.getText().trim());
+            String dateStr = dateField.getText().trim();
+            String timeStr = timeField.getText().trim();
             String status = statusField.getText().trim();
 
+            if (dateStr.isEmpty() || timeStr.isEmpty() || status.isEmpty()) {
+                JOptionPane.showMessageDialog(this, "Please fill all fields.");
+                return;
+            }
+
+            Date date = Date.valueOf(dateStr);  // expects YYYY-MM-DD
+            Time time = Time.valueOf(timeStr);  // expects HH:MM:SS
+
             appointmentData.addAppointment(patientId, doctorId, date, time, status);
-            JOptionPane.showMessageDialog(this, "Appointment added!");
+            JOptionPane.showMessageDialog(this, "Appointment added successfully!");
 
-            dateField.setText("");
-            timeField.setText("");
-            statusField.setText("Scheduled");
-
+            clearForm();
             refreshAppointmentList();
-        } catch (Exception ex) {
-            JOptionPane.showMessageDialog(this, "Error adding appointment: " + ex.getMessage());
+        } catch (IllegalArgumentException ex) {
+            JOptionPane.showMessageDialog(this, "Date or Time format is invalid.\nDate: YYYY-MM-DD\nTime: HH:MM:SS");
+        } catch (SQLException ex) {
+            JOptionPane.showMessageDialog(this, "Error adding appointment:\n" + ex.getMessage());
+            ex.printStackTrace();
         }
+    }
+
+    private void clearForm() {
+        dateField.setText("");
+        timeField.setText("");
+        statusField.setText("Scheduled");
     }
 
     private void refreshAppointmentList() {
         try {
             List<String> list = appointmentData.getAllAppointments();
             appointmentListArea.setText("");
-
             for (String a : list) {
                 appointmentListArea.append(a + "\n");
             }
-        } catch (Exception e) {
-            appointmentListArea.setText("Error loading appointments.");
+        } catch (SQLException ex) {
+            appointmentListArea.setText("Error loading appointments:\n" + ex.getMessage());
+            ex.printStackTrace();
         }
     }
 }

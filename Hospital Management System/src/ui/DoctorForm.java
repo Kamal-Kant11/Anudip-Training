@@ -72,7 +72,7 @@ public class DoctorForm extends JFrame {
             }
 
             doctorData.addDoctor(name, specialty, contact);
-            JOptionPane.showMessageDialog(this, "Doctor added!");
+            JOptionPane.showMessageDialog(this, "Doctor added successfully!");
 
             nameField.setText("");
             specialtyField.setText("");
@@ -80,7 +80,8 @@ public class DoctorForm extends JFrame {
 
             refreshDoctorList();
         } catch (SQLException ex) {
-            JOptionPane.showMessageDialog(this, "Error: " + ex.getMessage());
+            JOptionPane.showMessageDialog(this, "Error adding doctor:\n" + ex.getMessage());
+            ex.printStackTrace();
         }
     }
 
@@ -88,12 +89,12 @@ public class DoctorForm extends JFrame {
         try {
             List<String> list = doctorData.getAllDoctors();
             doctorListArea.setText("");
-
             for (String d : list) {
                 doctorListArea.append(d + "\n");
             }
-        } catch (Exception e) {
-            doctorListArea.setText("Error loading doctor list.");
+        } catch (SQLException ex) {
+            JOptionPane.showMessageDialog(this, "Error loading doctor list:\n" + ex.getMessage());
+            ex.printStackTrace();
         }
     }
 }
